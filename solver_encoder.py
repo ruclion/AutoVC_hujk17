@@ -1,8 +1,10 @@
-from model_vc import Generator
-import torch
-import torch.nn.functional as F
+import os
 import time
+import torch
 import datetime
+from model_vc import Generator
+import torch.nn.functional as F
+from tensorboardX import SummaryWriter
 
 
 class Solver(object):
@@ -30,6 +32,8 @@ class Solver(object):
         self.device = torch.device('cuda:0' if self.use_cuda else 'cpu')
         self.log_step = config.log_step
         self.ckpt_step = config.ckpt_step
+        self.val_step = config.val_step
+        self.logs_dir = config.logs_dir
 
         # Build the model and tensorboard.
         self.build_model()
@@ -37,7 +41,12 @@ class Solver(object):
             
     def build_model(self):
         
-        self.G = Generator(self.dim_neck, self.dim_emb, self.dim_pre, self.freq)        
+        self.G = Generator(self.dim_neck, self.dim_emb, self.dim_pre, self.freq)
+
+        if os.path.exists(self.logs_dir) is False:
+            os.makedirs(self.logs_dir, exist_ok=True)
+
+        self.writer = SummaryWriter(log_dir=self.logs_dir)
         
         self.g_optimizer = torch.optim.Adam(self.G.parameters(), 0.0001)
         
@@ -57,6 +66,7 @@ class Solver(object):
         # Set data loader.
         data_loader = self.vcc_loader
         val_data_loader = self.val_loader
+        writer = self.writer
         
         # Print logs in specified order
         keys = ['G/loss_id','G/loss_id_psnt','G/loss_cd', 'G/loss']
@@ -124,10 +134,16 @@ class Solver(object):
                 for tag in keys:
                     log += ", {}: {:.4f}".format(tag, loss[tag])
                 print(log)
+                # TB
+                for tag in keys:
+                    writer.add_scalar(tag, loss[tag], (i + 1))
+                # writer.add_scalar("loss_id", float(loss.item()), (i + 1))
                 
+
             if (i + 1) % self.ckpt_step == 0:
-                torch.save({'model': self.G.state_dict(), 'optimizer': self.g_optimizer.state_dict()}, 'autovc_' + str(i) + '.ckpt')
+                torch.save({'model': self.G.state_dict(), 'optimizer': self.g_optimizer.state_dict()}, os.path.join(self.logs_dir, 'autovc_' + str(i) + '.ckpt'))
             
+
             if (i + 1) % self.val_step == 0:
                 val_data_iter = iter(val_data_loader)
                 val_loss = {}
@@ -166,11 +182,15 @@ class Solver(object):
                     except StopIteration:
                         print('val data loader finished')
                         break
+
                 # print
                 log = "Val ------ Elapsed [{}], Iteration [{}/{}]".format(et, i+1, self.num_iters)
                 for tag in val_keys:
                     log += ", {}: {:.4f}".format(tag, val_loss[tag])
                 print(log)
+                # TB
+                for tag in val_keys:
+                    writer.add_scalar(tag, val_loss[tag], (i + 1))
                 self.G.train()
                                 
 

@@ -45,6 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--log_step', type=int, default=10)
     parser.add_argument('--ckpt_step', type=int, default=10000)
     parser.add_argument('--val_step', type=int, default=10000)
+    parser.add_argument('--logs_dir', type=str, default='./logs_dir')
 
     config = parser.parse_args()
     print(config)
