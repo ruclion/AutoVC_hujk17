@@ -13,7 +13,8 @@ def main(config):
     cudnn.benchmark = True
 
     # Data loader.
-    vcc_loader = get_loader(config.data_dir, config.batch_size, config.len_crop)
+    vcc_loader = get_loader(config.data_dir, config.data_pkl_path, config.batch_size, config.len_crop)
+    val_loader = get_loader(config.data_dir, config.data_val_pkl_path, config.batch_size, config.len_crop)
     
     solver = Solver(vcc_loader, config)
 
@@ -34,12 +35,16 @@ if __name__ == '__main__':
     
     # Training configuration.
     parser.add_argument('--data_dir', type=str, default='./spmel')
+    parser.add_argument('--data_pkl_path', type=str, default='./spmel/train.pkl')
+    parser.add_argument('--data_val_pkl_path', type=str, default='./spmel/val.pkl')
     parser.add_argument('--batch_size', type=int, default=2, help='mini-batch size')
     parser.add_argument('--num_iters', type=int, default=1000000, help='number of total iterations')
     parser.add_argument('--len_crop', type=int, default=128, help='dataloader output sequence length')
     
     # Miscellaneous.
     parser.add_argument('--log_step', type=int, default=10)
+    parser.add_argument('--ckpt_step', type=int, default=10000)
+    parser.add_argument('--val_step', type=int, default=10000)
 
     config = parser.parse_args()
     print(config)
