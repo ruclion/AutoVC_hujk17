@@ -101,6 +101,7 @@ class Solver(object):
                         
             # Identity mapping loss
             x_identic, x_identic_psnt, code_real = self.G(x_real, emb_org, emb_org)
+            # print(x_real.size(), x_identic.size())
             g_loss_id = F.mse_loss(x_real, x_identic)   
             g_loss_id_psnt = F.mse_loss(x_real, x_identic_psnt)   
             
@@ -145,6 +146,7 @@ class Solver(object):
             
 
             if (i + 1) % self.val_step == 0:
+                print('start val...')
                 val_data_iter = iter(val_data_loader)
                 val_loss = {}
                 val_loss['G/val_loss_id'] = 0
@@ -156,7 +158,7 @@ class Solver(object):
                 while True:
                     try:
                         val_x_real, val_emb_org = next(val_data_iter)
-                        print(val_emb_org)
+                        # print(val_emb_org)
                         val_x_real = val_x_real.to(self.device) 
                         val_emb_org = val_emb_org.to(self.device) 
                         self.G.eval()
@@ -183,8 +185,10 @@ class Solver(object):
                         print('val data loader finished')
                         break
 
+                for tag in val_keys:
+                    val_loss[tag] /= cnt
                 # print
-                log = "Val ------ Elapsed [{}], Iteration [{}/{}]".format(et, i+1, self.num_iters)
+                log = "Val--------,  Iteration [{}/{}]".format(i+1, self.num_iters)
                 for tag in val_keys:
                     log += ", {}: {:.4f}".format(tag, val_loss[tag])
                 print(log)

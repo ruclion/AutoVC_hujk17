@@ -109,12 +109,14 @@ class Decoder(nn.Module):
         
         #self.lstm1.flatten_parameters()
         x, _ = self.lstm1(x)
+        # print('afer lstm:', x.size())
         x = x.transpose(1, 2)
-        
+        # print('before cnn:', x.size())
         for conv in self.convolutions:
             x = F.relu(conv(x))
+        # print('afer cnn:', x.size())
         x = x.transpose(1, 2)
-        
+        # print('afer lstm2:', x.size())
         outputs, _ = self.lstm2(x)
         
         decoder_output = self.linear_projection(outputs)
@@ -195,9 +197,13 @@ class Generator(nn.Module):
                 
         mel_outputs_postnet = self.postnet(mel_outputs.transpose(2,1))
         mel_outputs_postnet = mel_outputs + mel_outputs_postnet.transpose(2,1)
+
+        # print('mel ori:', mel_outputs.size(), mel_outputs_postnet.size())
         
-        mel_outputs = mel_outputs.unsqueeze(1)
-        mel_outputs_postnet = mel_outputs_postnet.unsqueeze(1)
+        # mel_outputs = mel_outputs.unsqueeze(1)
+        # mel_outputs_postnet = mel_outputs_postnet.unsqueeze(1)
+
+        # print('mel ori:', mel_outputs.size(), mel_outputs_postnet.size())
         
         return mel_outputs, mel_outputs_postnet, torch.cat(codes, dim=-1)
 

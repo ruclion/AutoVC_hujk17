@@ -13,10 +13,10 @@ def main(config):
     cudnn.benchmark = True
 
     # Data loader.
-    vcc_loader = get_loader(config.data_dir, config.data_pkl_path, config.batch_size, config.len_crop)
-    val_loader = get_loader(config.data_dir, config.data_val_pkl_path, config.batch_size, config.len_crop)
+    vcc_loader = get_loader(config.data_dir, config.data_pkl_path, config.batch_size, config.len_crop, shuffle=True)
+    val_loader = get_loader(config.data_dir, config.data_val_pkl_path, config.batch_size, config.len_crop, shuffle=False)
     
-    solver = Solver(vcc_loader, config)
+    solver = Solver(vcc_loader, val_loader, config)
 
     solver.train()
         
@@ -43,8 +43,10 @@ if __name__ == '__main__':
     
     # Miscellaneous.
     parser.add_argument('--log_step', type=int, default=10)
-    parser.add_argument('--ckpt_step', type=int, default=10000)
-    parser.add_argument('--val_step', type=int, default=10000)
+    parser.add_argument('--ckpt_step', type=int, default=1000)
+    # parser.add_argument('--ckpt_step', type=int, default=2)
+    parser.add_argument('--val_step', type=int, default=1000)
+    # parser.add_argument('--val_step', type=int, default=3)
     parser.add_argument('--logs_dir', type=str, default='./logs_dir')
 
     config = parser.parse_args()
