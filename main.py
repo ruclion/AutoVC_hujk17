@@ -34,10 +34,10 @@ if __name__ == '__main__':
     parser.add_argument('--freq', type=int, default=16)
     
     # Training configuration.
-    parser.add_argument('--data_dir', type=str, default='./spmel')
-    parser.add_argument('--data_pkl_path', type=str, default='./spmel/train.pkl')
-    parser.add_argument('--data_val_pkl_path', type=str, default='./spmel/val.pkl')
-    parser.add_argument('--batch_size', type=int, default=2, help='mini-batch size')
+    parser.add_argument('--data_dir', type=str, default='./full_106_spmel')
+    parser.add_argument('--data_pkl_path', type=str, default='./full_106_spmel/train_seen_speaker.pkl')
+    parser.add_argument('--data_val_pkl_path', type=str, default='./full_106_spmel/val_seen_speaker.pkl')
+    parser.add_argument('--batch_size', type=int, default=256, help='mini-batch size')
     parser.add_argument('--num_iters', type=int, default=1000000, help='number of total iterations')
     parser.add_argument('--len_crop', type=int, default=128, help='dataloader output sequence length')
     

@@ -75,6 +75,7 @@ class Solver(object):
         # Start training.
         print('Start training...')
         start_time = time.time()
+        data_iter = iter(data_loader)
         for i in range(self.num_iters):
 
             # =================================================================================== #
@@ -184,7 +185,7 @@ class Solver(object):
                     except StopIteration:
                         print('val data loader finished')
                         break
-
+                # print('val times:', cnt)
                 for tag in val_keys:
                     val_loss[tag] /= cnt
                 # print

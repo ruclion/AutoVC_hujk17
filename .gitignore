@@ -2,3 +2,5 @@ logs-AutoVC/
 pretrained-*
 *__pycache__*
 spmel/
+full_106_spmel/
+logs_dir/
