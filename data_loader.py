@@ -47,7 +47,7 @@ class Utterances(data.Dataset):
                     uttrs[j] = tmp
                     # print('speaker id:', tmp)
                 else: # load the mel-spectrograms
-                    # print('mel:', tmp)
+                    print('mel path:', self.root_dir, tmp)
                     uttrs[j] = np.load(os.path.join(self.root_dir, tmp))
             dataset[idx_offset+k] = uttrs
                    
@@ -90,7 +90,7 @@ def get_loader(root_dir, pkl_path, batch_size=16, len_crop=128, shuffle=True, nu
                                   batch_size=batch_size,
                                   shuffle=shuffle,
                                   num_workers=num_workers,
-                                  drop_last=True,
+                                  drop_last=False,
                                   worker_init_fn=worker_init_fn)
     return data_loader
 

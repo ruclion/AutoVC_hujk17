@@ -75,128 +75,143 @@ class Solver(object):
         # Start training.
         print('Start training...')
         start_time = time.time()
-        data_iter = iter(data_loader)
-        for i in range(self.num_iters):
+        i = 0
+        print('batch has', len(data_loader), 'batches')
+        while True:
+        # data_iter = iter(data_loader)
+            for _, (x_real, emb_org) in enumerate(data_loader):
 
-            # =================================================================================== #
-            #                             1. Preprocess input data                                #
-            # =================================================================================== #
+                # =================================================================================== #
+                #                             1. Preprocess input data                                #
+                # =================================================================================== #
 
-            # Fetch data.
-            try:
-                x_real, emb_org = next(data_iter)
-            except:
-                data_iter = iter(data_loader)
-                x_real, emb_org = next(data_iter)
-            
-            
-            x_real = x_real.to(self.device) 
-            emb_org = emb_org.to(self.device) 
-                        
-       
-            # =================================================================================== #
-            #                               2. Train the generator                                #
-            # =================================================================================== #
-            
-            self.G.train()
-                        
-            # Identity mapping loss
-            x_identic, x_identic_psnt, code_real = self.G(x_real, emb_org, emb_org)
-            # print(x_real.size(), x_identic.size())
-            g_loss_id = F.mse_loss(x_real, x_identic)   
-            g_loss_id_psnt = F.mse_loss(x_real, x_identic_psnt)   
-            
-            # Code semantic loss.
-            code_reconst = self.G(x_identic_psnt, emb_org, None)
-            g_loss_cd = F.l1_loss(code_real, code_reconst)
-
-
-            # Backward and optimize.
-            g_loss = g_loss_id + g_loss_id_psnt + self.lambda_cd * g_loss_cd
-            self.reset_grad()
-            g_loss.backward()
-            self.g_optimizer.step()
-
-            # Logging.
-            loss = {}
-            loss['G/loss_id'] = g_loss_id.item()
-            loss['G/loss_id_psnt'] = g_loss_id_psnt.item()
-            loss['G/loss_cd'] = g_loss_cd.item()
-            loss['G/loss'] = g_loss.item()
-
-            # =================================================================================== #
-            #                                 4. Miscellaneous                                    #
-            # =================================================================================== #
-
-            # Print out training information.
-            if (i+1) % self.log_step == 0:
-                et = time.time() - start_time
-                et = str(datetime.timedelta(seconds=et))[:-7]
-                log = "Elapsed [{}], Iteration [{}/{}]".format(et, i+1, self.num_iters)
-                for tag in keys:
-                    log += ", {}: {:.4f}".format(tag, loss[tag])
-                print(log)
-                # TB
-                for tag in keys:
-                    writer.add_scalar(tag, loss[tag], (i + 1))
-                # writer.add_scalar("loss_id", float(loss.item()), (i + 1))
+                # Fetch data.
                 
 
-            if (i + 1) % self.ckpt_step == 0:
-                torch.save({'model': self.G.state_dict(), 'optimizer': self.g_optimizer.state_dict()}, os.path.join(self.logs_dir, 'autovc_' + str(i) + '.ckpt'))
-            
 
-            if (i + 1) % self.val_step == 0:
-                print('start val...')
-                val_data_iter = iter(val_data_loader)
-                val_loss = {}
-                val_loss['G/val_loss_id'] = 0
-                val_loss['G/val_loss_id_psnt'] = 0
-                val_loss['G/val_loss_cd'] = 0
-                val_loss['G/val_loss'] = 0
-                cnt = 0
 
-                while True:
-                    try:
-                        val_x_real, val_emb_org = next(val_data_iter)
-                        # print(val_emb_org)
-                        val_x_real = val_x_real.to(self.device) 
-                        val_emb_org = val_emb_org.to(self.device) 
-                        self.G.eval()
-                        with torch.no_grad():
-                            # Identity mapping val loss
-                            val_x_identic, val_x_identic_psnt, val_code_real = self.G(val_x_real, val_emb_org, val_emb_org)
-                            g_val_loss_id = F.mse_loss(val_x_real, val_x_identic)   
-                            g_val_loss_id_psnt = F.mse_loss(val_x_real, val_x_identic_psnt)   
+
+                # try:
+                #     x_real, emb_org = next(data_iter)
+                # except:
+                #     data_iter = iter(data_loader)
+                #     x_real, emb_org = next(data_iter)
+                
+                
+                x_real = x_real.to(self.device) 
+                emb_org = emb_org.to(self.device) 
                             
-                            # Code semantic val loss
-                            val_code_reconst = self.G(val_x_identic_psnt, val_emb_org, None)
-                            g_val_loss_cd = F.l1_loss(val_code_real, val_code_reconst)
-
-                            # val loss
-                            g_val_loss = g_val_loss_id + g_val_loss_id_psnt + self.lambda_cd * g_val_loss_cd
-
-                            # sum val loss
-                            val_loss['G/val_loss_id'] += g_val_loss_id
-                            val_loss['G/val_loss_id_psnt'] += g_val_loss_id_psnt
-                            val_loss['G/val_loss_cd'] += g_val_loss_cd
-                            val_loss['G/val_loss'] += g_val_loss
-                            cnt += 1
-                    except StopIteration:
-                        print('val data loader finished')
-                        break
-                # print('val times:', cnt)
-                for tag in val_keys:
-                    val_loss[tag] /= cnt
-                # print
-                log = "Val--------,  Iteration [{}/{}]".format(i+1, self.num_iters)
-                for tag in val_keys:
-                    log += ", {}: {:.4f}".format(tag, val_loss[tag])
-                print(log)
-                # TB
-                for tag in val_keys:
-                    writer.add_scalar(tag, val_loss[tag], (i + 1))
+        
+                # =================================================================================== #
+                #                               2. Train the generator                                #
+                # =================================================================================== #
+                
                 self.G.train()
+                            
+                # Identity mapping loss
+                x_identic, x_identic_psnt, code_real = self.G(x_real, emb_org, emb_org)
+                # print(x_real.size(), x_identic.size())
+                g_loss_id = F.mse_loss(x_real, x_identic)   
+                g_loss_id_psnt = F.mse_loss(x_real, x_identic_psnt)   
+                
+                # Code semantic loss.
+                code_reconst = self.G(x_identic_psnt, emb_org, None)
+                g_loss_cd = F.l1_loss(code_real, code_reconst)
+
+
+                # Backward and optimize.
+                g_loss = g_loss_id + g_loss_id_psnt + self.lambda_cd * g_loss_cd
+                self.reset_grad()
+                g_loss.backward()
+                self.g_optimizer.step()
+
+                # Logging.
+                loss = {}
+                loss['G/loss_id'] = g_loss_id.item()
+                loss['G/loss_id_psnt'] = g_loss_id_psnt.item()
+                loss['G/loss_cd'] = g_loss_cd.item()
+                loss['G/loss'] = g_loss.item()
+
+                # =================================================================================== #
+                #                                 4. Miscellaneous                                    #
+                # =================================================================================== #
+
+                # Print out training information.
+                if (i + 1) % self.log_step == 0:
+                    et = time.time() - start_time
+                    et = str(datetime.timedelta(seconds=et))[:-7]
+                    log = "10 steps log: Elapsed [{}], Iteration [{}/{}]".format(et, i+1, self.num_iters)
+                    for tag in keys:
+                        log += ", {}: {:.4f}".format(tag, loss[tag])
+                    print(log)
+                    # TB
+                    for tag in keys:
+                        writer.add_scalar(tag, loss[tag], (i + 1))
+                    # writer.add_scalar("loss_id", float(loss.item()), (i + 1))
+                    start_time = time.time()
+                    
+
+                if (i + 1) % self.ckpt_step == 0:
+                    torch.save({'model': self.G.state_dict(), 'optimizer': self.g_optimizer.state_dict()}, os.path.join(self.logs_dir, 'autovc_' + str(i) + '.ckpt'))
+                
+
+                if (i + 1) % self.val_step == 0:
+                    print('start val...')
+                    val_data_iter = iter(val_data_loader)
+                    val_loss = {}
+                    val_loss['G/val_loss_id'] = 0
+                    val_loss['G/val_loss_id_psnt'] = 0
+                    val_loss['G/val_loss_cd'] = 0
+                    val_loss['G/val_loss'] = 0
+                    cnt = 0
+
+                    while True:
+                        try:
+                            val_x_real, val_emb_org = next(val_data_iter)
+                            # print(val_emb_org)
+                            val_x_real = val_x_real.to(self.device) 
+                            val_emb_org = val_emb_org.to(self.device) 
+                            self.G.eval()
+                            with torch.no_grad():
+                                # Identity mapping val loss
+                                val_x_identic, val_x_identic_psnt, val_code_real = self.G(val_x_real, val_emb_org, val_emb_org)
+                                g_val_loss_id = F.mse_loss(val_x_real, val_x_identic)   
+                                g_val_loss_id_psnt = F.mse_loss(val_x_real, val_x_identic_psnt)   
+                                
+                                # Code semantic val loss
+                                val_code_reconst = self.G(val_x_identic_psnt, val_emb_org, None)
+                                g_val_loss_cd = F.l1_loss(val_code_real, val_code_reconst)
+
+                                # val loss
+                                g_val_loss = g_val_loss_id + g_val_loss_id_psnt + self.lambda_cd * g_val_loss_cd
+
+                                # sum val loss
+                                val_loss['G/val_loss_id'] += g_val_loss_id
+                                val_loss['G/val_loss_id_psnt'] += g_val_loss_id_psnt
+                                val_loss['G/val_loss_cd'] += g_val_loss_cd
+                                val_loss['G/val_loss'] += g_val_loss
+                                cnt += 1
+                        except StopIteration:
+                            print('val data loader finished')
+                            break
+                    # print('val times:', cnt)
+                    for tag in val_keys:
+                        val_loss[tag] /= cnt
+                    # print
+                    log = "Val--------,  Iteration [{}/{}]".format(i+1, self.num_iters)
+                    for tag in val_keys:
+                        log += ", {}: {:.4f}".format(tag, val_loss[tag])
+                    print(log)
+                    # TB
+                    for tag in val_keys:
+                        writer.add_scalar(tag, val_loss[tag], (i + 1))
+                    self.G.train()
+
+
+                if (i + 1) == self.num_iters:
+                    break
+                
+                i += 1
                                 
 
     

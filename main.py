@@ -14,6 +14,8 @@ def main(config):
 
     # Data loader.
     vcc_loader = get_loader(config.data_dir, config.data_pkl_path, config.batch_size, config.len_crop, shuffle=True)
+    print(vcc_loader)
+    print('len:', len(vcc_loader))
     val_loader = get_loader(config.data_dir, config.data_val_pkl_path, config.batch_size, config.len_crop, shuffle=False)
     
     solver = Solver(vcc_loader, val_loader, config)
