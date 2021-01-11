@@ -7,7 +7,7 @@ from synthesis import wavegen
 spect_vc = pickle.load(open('results.pkl', 'rb'))
 device = torch.device("cuda")
 model = build_model().to(device)
-checkpoint = torch.load("checkpoint_step001000000_ema.pth")
+checkpoint = torch.load("pretrained-checkpoint_step001000000_ema.pth")
 model.load_state_dict(checkpoint["state_dict"])
 
 for spect in spect_vc:

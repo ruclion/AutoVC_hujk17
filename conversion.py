@@ -14,8 +14,10 @@ def pad_seq(x, base=32):
 
 device = 'cuda:0'
 G = Generator(32,256,512,32).eval().to(device)
+# G = Generator(16,256,512,16).eval().to(device)
 
-g_checkpoint = torch.load('autovc.ckpt')
+# g_checkpoint = torch.load('autovc.ckpt')
+g_checkpoint = torch.load('logs_dir/autovc_406000.ckpt')
 G.load_state_dict(g_checkpoint['model'])
 
 metadata = pickle.load(open('metadata.pkl', "rb"))
@@ -35,11 +37,14 @@ for sbmt_i in metadata:
         
         with torch.no_grad():
             _, x_identic_psnt, _ = G(uttr_org, emb_org, emb_trg)
+            print('mel size:', x_identic_psnt.size())
             
         if len_pad == 0:
-            uttr_trg = x_identic_psnt[0, 0, :, :].cpu().numpy()
+            # uttr_trg = x_identic_psnt[0, 0, :, :].cpu().numpy()
+            uttr_trg = x_identic_psnt[0, :, :].cpu().numpy()
         else:
-            uttr_trg = x_identic_psnt[0, 0, :-len_pad, :].cpu().numpy()
+            # uttr_trg = x_identic_psnt[0, 0, :-len_pad, :].cpu().numpy()
+            uttr_trg = x_identic_psnt[0, :-len_pad, :].cpu().numpy()
         
         spect_vc.append( ('{}x{}'.format(sbmt_i[0], sbmt_j[0]), uttr_trg) )
         
